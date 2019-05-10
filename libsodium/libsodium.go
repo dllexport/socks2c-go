@@ -12,7 +12,7 @@ import (
 import "C"
 
 func Init() {
-	fmt.Printf("[initing libsodium]\n")
+	fmt.Printf("[Init libsodium]\n")
 	C.sodium_init()
 }
 

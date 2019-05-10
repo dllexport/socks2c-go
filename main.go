@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 )
-import "github.com/pborman/getopt"
+
 import "./libsodium"
 import "./acceptor"
 import "./protocol"
+import "./app"
 
 func checkError(err error) {
 	if err != nil {
@@ -17,20 +18,12 @@ func checkError(err error) {
 }
 
 func main() {
-	optKey := getopt.StringLong("k", 0, "", "proxy key")
-	optServerHost := getopt.StringLong("s", 0, "", "server ep")
-	optSocks5Host := getopt.StringLong("c", 0, "", "local socks5 ep")
-	optHelp := getopt.BoolLong("help", 0, "Help")
-	getopt.Parse()
 
-	if *optHelp {
-		getopt.Usage()
-		os.Exit(0)
-	}
+	key, server_ep, socks5_ep := app.Parse()
 
-	protocol.SetKey(*optKey)
+	protocol.SetKey(key)
 
-	acceptor.Init(*optServerHost, *optSocks5Host)
+	acceptor.Init(server_ep, socks5_ep)
 
 	libsodium.Init()
 
