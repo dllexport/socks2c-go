@@ -21,6 +21,8 @@ func main() {
 
 	key, server_ep, socks5_ep := app.Parse()
 
+	app.SingleApp()
+
 	protocol.SetKey(key)
 
 	acceptor.Init(server_ep, socks5_ep)

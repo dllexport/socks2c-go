@@ -14,14 +14,20 @@ func Parse() (key, server_ep, socks5_ep string) {
 	optSocks5Host := getopt.StringLong("c", 0, "", "local socks5 ep")
 	optHelp := getopt.BoolLong("help", 0, "Help")
 	optVersion := getopt.BoolLong("v", 0, "Version Infomation")
+	optStop := getopt.BoolLong("stop", 0, "stop socks2c-go")
 	getopt.Parse()
 
 	if *optHelp {
 		getopt.Usage()
 		os.Exit(0)
 	}
+
 	if *optVersion {
 		fmt.Printf("%s\n", Version())
+		os.Exit(0)
+	}
+	if *optStop {
+		SendStopSingal()
 		os.Exit(0)
 	}
 
