@@ -130,9 +130,8 @@ func handleSocks5Request(local_conn, remote_conn *net.Conn) bool {
 				return false
 			}
 
-			fmt.Printf("[tcp proxy] %s:%d", ip, port)
-			connectAndSend(remote_conn, req_buff[:byte_read])
-			return true
+			fmt.Printf("[tcp proxy] %s:%d\n", ip, port)
+			break
 		}
 	case IPV6:
 		{
@@ -149,12 +148,19 @@ func handleSocks5Request(local_conn, remote_conn *net.Conn) bool {
 
 			fmt.Printf("[tcp proxy] %s:%d\n", domain, port)
 
+			addr := net.ParseIP(domain)
+			if addr != nil {
+				fmt.Printf("given ip address but mark domain request\n")
+				break
+			}
+
 			err := checkDomain(domain)
 
 			if err != nil {
 				fmt.Printf("%v is not a valid domain\n", domain)
 				return false
 			}
+
 			// addr, err := net.LookupIP(domain)
 
 			// if err != nil {
@@ -162,11 +168,10 @@ func handleSocks5Request(local_conn, remote_conn *net.Conn) bool {
 			// }
 
 			// fmt.Printf("resolved %s\n", addr[0])
-			connectAndSend(remote_conn, req_buff[:byte_read])
-			return true
+			break
 		}
 	}
-	return false
+	return connectAndSend(remote_conn, req_buff[:byte_read])
 }
 
 // checkDomain returns an error if the domain name is not valid
@@ -247,9 +252,9 @@ func connectAndSend(remote_conn *net.Conn, data []byte) (res bool) {
 
 func upStream(local_conn, remote_conn net.Conn) {
 	defer local_conn.Close()
-	defer remote_conn.Close()
+	//defer remote_conn.Close()
 
-	local_recv_buff := make([]byte, 1500)
+	local_recv_buff := make([]byte, 1500-52)
 
 	for {
 		byte_read, err := local_conn.Read(local_recv_buff)
@@ -273,7 +278,7 @@ func upStream(local_conn, remote_conn net.Conn) {
 	}
 }
 func downStream(local_conn, remote_conn net.Conn) {
-	defer local_conn.Close()
+	//defer local_conn.Close()
 	defer remote_conn.Close()
 
 	for {
@@ -311,7 +316,7 @@ func downStream(local_conn, remote_conn net.Conn) {
 
 		_, err = local_conn.Write(remote_recv_buff[:protocol_hdr.PAYLOAD_LENGTH])
 		if err != nil {
-			fmt.Printf("local_conn write err\n")
+			//fmt.Printf("local_conn write err\n")
 			return
 		}
 	}
