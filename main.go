@@ -28,10 +28,11 @@ func main() {
 		os.Exit(0)
 	}
 
-	libsodium.Init()
-
-	protocol.SetKey("12345678")
+	protocol.SetKey(*optKey)
 
 	acceptor.Init(*optServerHost, *optSocks5Host)
+
+	libsodium.Init()
+
 	acceptor.Accept()
 }

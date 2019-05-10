@@ -9,14 +9,20 @@ import (
 )
 
 var proxy_key = [32]byte{0}
+var key_str string
 
 func SetKey(key string) {
 	if len(key) == 0 {
-		fmt.Printf("--k missing")
+		fmt.Printf("--k missing\n")
 		os.Exit(-1)
 	}
+	key_str = key
 	str := []byte(key)
 	copy(proxy_key[0:32], str)
+}
+
+func GetKey() string {
+	return key_str
 }
 
 type Protocol struct {

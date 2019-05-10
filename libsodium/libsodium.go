@@ -10,9 +10,8 @@ import (
 import "C"
 
 func Init() {
-	fmt.Printf("initing libsodium\n")
-	res := C.sodium_init()
-	fmt.Printf("done %v\n", res)
+	fmt.Printf("[initing libsodium]\n")
+	C.sodium_init()
 }
 
 func RandomBytes(size uint64) []byte {

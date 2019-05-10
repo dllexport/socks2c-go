@@ -12,6 +12,8 @@ import (
 	"../protocol"
 )
 
+var remote_ep string
+
 type METHOD_REQ struct {
 	VER, METHOD, METHODS byte
 }
@@ -224,8 +226,6 @@ func checkDomain(name string) error {
 // data should be payload only
 func connectAndSend(remote_conn *net.Conn, data []byte) (res bool) {
 
-	remote_ep := "108.61.181.123:4567"
-
 	var err_conn error
 	*remote_conn, err_conn = net.Dial("tcp", remote_ep)
 
@@ -321,7 +321,9 @@ func handleTunnelFlow(local_conn, remote_conn net.Conn) {
 	go downStream(local_conn, remote_conn)
 }
 
-func HandleConnection(conn net.Conn) {
+func HandleConnection(conn net.Conn, remote string) {
+
+	remote_ep = remote
 
 	var local_conn = conn
 	var remote_conn net.Conn
