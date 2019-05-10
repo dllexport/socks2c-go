@@ -6,7 +6,9 @@ import (
 )
 
 // #cgo LDFLAGS: /usr/local/lib/libsodium.a
-// #include "sodium.h"
+// #include "sodium/crypto_aead_aes256gcm.h"
+// #include "sodium/core.h"
+// #include "sodium/randombytes.h"
 import "C"
 
 func Init() {
