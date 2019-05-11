@@ -264,7 +264,7 @@ func downStream(local_conn, remote_conn net.Conn) {
 		read_err := protocol.OnPayloadReadFromRemote(protocol_hdr, remote_recv_buff)
 
 		if read_err != true {
-			fmt.Printf("decrypt err\n")
+			fmt.Printf("[tcp proxy] decrypt err\n")
 			return
 		}
 
