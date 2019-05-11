@@ -5,10 +5,10 @@ import (
 	"os"
 )
 
-import "./libsodium"
 import "./acceptor"
-import "./protocol"
+
 import "./app"
+import "./app/config"
 
 func checkError(err error) {
 	if err != nil {
@@ -23,11 +23,8 @@ func main() {
 
 	app.SingleApp()
 
-	protocol.SetKey(key)
+	config.Init(key, server_ep, socks5_ep)
 
-	acceptor.Init(server_ep, socks5_ep)
+	acceptor.Run()
 
-	libsodium.Init()
-
-	acceptor.Accept()
 }

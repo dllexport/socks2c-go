@@ -5,11 +5,10 @@ import (
 	"net"
 	"os"
 )
-import tcp "../proxy"
+import tcp "../proxy/tcp"
+import udp "../proxy/udp"
 import "../protocol"
-
-var acceptor_ep string
-var remote_ep string
+import config "../app/config"
 
 func checkError(err error) {
 	if err != nil {
@@ -18,36 +17,11 @@ func checkError(err error) {
 	}
 }
 
-func endpointCheck(endpoint string) {
-	_, err := net.Dial("udp", endpoint)
-	if err != nil {
-		fmt.Printf("%s is not a vaild endpoint\n", endpoint)
-		os.Exit(-1)
-	}
-}
-
-func Init(server, socks5 string) {
-	if len(server) == 0 {
-		fmt.Printf("--s missing\n")
-		os.Exit(-1)
-	}
-	if len(socks5) == 0 {
-		fmt.Printf("--c missing\n")
-		os.Exit(-1)
-	}
-
-	endpointCheck(socks5)
-	endpointCheck(server)
-
-	acceptor_ep = socks5
-	remote_ep = server
-}
-
-func Accept() {
-	acceptor, err := net.Listen("tcp", acceptor_ep)
+func tcpAccept() {
+	acceptor, err := net.Listen("tcp", config.Socks5Endpoint)
 	checkError(err)
 
-	fmt.Printf("[Client] TcpProxy started, Server: [%s], Key: [%s], Local socks5 Port: [%s]\n", remote_ep, protocol.GetKey(), acceptor_ep)
+	fmt.Printf("[Client] TcpProxy started, Server: [%s], Key: [%s], Local socks5 Port: [%s]\n", config.ServerEndpoint, protocol.GetKey(), config.Socks5Endpoint)
 	for {
 		conn, err := acceptor.Accept()
 
@@ -55,6 +29,32 @@ func Accept() {
 			continue
 		}
 
-		go tcp.HandleConnection(conn, remote_ep)
+		go tcp.HandleConnection(conn, config.ServerEndpoint)
 	}
+}
+
+func udpAccept() {
+	udpaddr, _ := net.ResolveUDPAddr("udp4", config.Socks5Endpoint)
+	acceptor, err := net.ListenUDP("udp", udpaddr)
+	checkError(err)
+
+	fmt.Printf("[Client] UdpProxy started, Server: [%s], Key: [%s], Local socks5 Port: [%s]\n", config.ServerEndpoint, protocol.GetKey(), config.Socks5Endpoint)
+
+	udp.SetLocal(acceptor)
+
+	var local_recv_buff [1500]byte
+	for {
+		bytes_read, local_ep, err := acceptor.ReadFrom(local_recv_buff[:])
+
+		if err != nil {
+			continue
+		}
+
+		go udp.HandlePacket(local_ep, local_recv_buff[:bytes_read])
+	}
+}
+
+func Run() {
+	go tcpAccept()
+	udpAccept()
 }

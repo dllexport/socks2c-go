@@ -118,3 +118,28 @@ func OnPayloadReadFromRemote(protocol_hdr *Protocol, payload []byte) bool {
 
 	return decrypt_res
 }
+
+func OnUdpPayloadReadFromClient(payload []byte) []byte {
+	return OnSocks5RequestSent(payload)
+}
+
+func OnUdpPayloadReadFromRemote(payload []byte) ([]byte, bool) {
+
+	protocol_hdr := (*Protocol)(unsafe.Pointer(&payload[0]))
+
+	decrypt_res := decryptHeader(protocol_hdr, &payload)
+
+	if decrypt_res == false {
+		return nil, false
+	}
+
+	var payload_slice []byte = payload[ProtocolSize():]
+
+	decrypt_res = decryptPayload(protocol_hdr, &payload_slice)
+
+	if decrypt_res == false {
+		return nil, false
+	}
+
+	return payload_slice[:protocol_hdr.PAYLOAD_LENGTH], true
+}

@@ -1,77 +1,21 @@
 package tcp
 
 import (
-	"encoding/binary"
 	"fmt"
 	"io"
 	"net"
-	"strconv"
 	"time"
 	"unicode/utf8"
 	"unsafe"
 
-	"../protocol"
+	"../../protocol"
 )
+
+import socks5 "../../protocol/socks5"
 
 var remote_ep string
 
 var socket_timeout = 60 * time.Second
-
-type METHOD_REQ struct {
-	VER, METHOD, METHODS byte
-}
-
-type METHOD_REPLY struct {
-	VER, METHOD byte
-}
-
-const (
-	IPV4       = 0x01
-	DOMAINNAME = 0x03
-	IPV6       = 0x04
-)
-
-type SOCKS_REQ struct {
-	VER, CMD, RSV, ATYP byte
-}
-
-var DEFAULT_SOCKS_REPLY = [...]byte{0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x10, 0x10}
-
-func to_string(b byte) string {
-	return strconv.Itoa(int(b))
-}
-
-func parseIpPortFromSocks5Request(socks5_req_buff []byte) (ip string, port uint16, pass bool) {
-
-	for i := 4; i < 7; i++ {
-		ip += to_string(socks5_req_buff[i])
-		ip += "."
-	}
-	ip += to_string(socks5_req_buff[7])
-
-	port_buff := make([]byte, 2)
-	port_buff[1] = socks5_req_buff[9]
-	port_buff[0] = socks5_req_buff[8]
-	port = binary.BigEndian.Uint16(port_buff)
-
-	return ip, port, true
-}
-
-func parseDomainPortFromSocks5Request(socks5_req_buff []byte) (domain string, port uint16, pass bool) {
-
-	domain_length := int(socks5_req_buff[4])
-
-	for i := 0; i < domain_length; i++ {
-		domain += string(socks5_req_buff[i+5])
-	}
-
-	port_buff := make([]byte, 2)
-	port_buff[1] = socks5_req_buff[domain_length+6]
-	port_buff[0] = socks5_req_buff[domain_length+5]
-	port = binary.BigEndian.Uint16(port_buff)
-
-	return domain, port, true
-}
 
 func handleMethodSelection(conn net.Conn) bool {
 
@@ -82,14 +26,14 @@ func handleMethodSelection(conn net.Conn) bool {
 	if err != nil {
 		return false
 	}
-	client_req := (*METHOD_REQ)(unsafe.Pointer(&socks5_method_buff[0]))
+	client_req := (*socks5.METHOD_REQ)(unsafe.Pointer(&socks5_method_buff[0]))
 
 	if client_req.VER != 0x05 {
 		return false
 	}
 
 	buff := make([]byte, 2)
-	client_reply := (*METHOD_REPLY)(unsafe.Pointer(&buff[0]))
+	client_reply := (*socks5.METHOD_REPLY)(unsafe.Pointer(&buff[0]))
 	client_reply.VER = 0x05
 	client_reply.METHOD = 0x00
 
@@ -111,23 +55,23 @@ func handleSocks5Request(local_conn, remote_conn *net.Conn) bool {
 
 	//fmt.Printf("read %d bytes socks5 request", bytes_read)
 
-	client_req := (*SOCKS_REQ)(unsafe.Pointer(&req_buff[0]))
+	client_req := (*socks5.SOCKS_REQ)(unsafe.Pointer(&req_buff[0]))
 
 	if client_req.VER != 0x05 {
 		return false
 	}
 
 	// we send socks reply back
-	_, send_err := (*local_conn).Write(DEFAULT_SOCKS_REPLY[:])
+	_, send_err := (*local_conn).Write(socks5.DEFAULT_SOCKS_REPLY[:])
 
 	if send_err != nil {
 		return false
 	}
 
 	switch client_req.ATYP {
-	case IPV4:
+	case socks5.IPV4:
 		{
-			ip, port, pass := parseIpPortFromSocks5Request(req_buff)
+			ip, port, pass := socks5.ParseIpPortFromSocks5Request(req_buff)
 
 			if pass == false {
 				return false
@@ -136,14 +80,14 @@ func handleSocks5Request(local_conn, remote_conn *net.Conn) bool {
 			fmt.Printf("[tcp proxy] %s:%d\n", ip, port)
 			break
 		}
-	case IPV6:
+	case socks5.IPV6:
 		{
 			fmt.Printf("ipv6 not support yet")
 			return false
 		}
-	case DOMAINNAME:
+	case socks5.DOMAINNAME:
 		{
-			domain, port, pass := parseDomainPortFromSocks5Request(req_buff)
+			domain, port, pass := socks5.ParseDomainPortFromSocks5Request(req_buff)
 
 			if pass == false {
 				return false
