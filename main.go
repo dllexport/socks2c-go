@@ -1,14 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+
+	"./acceptor"
+	"./app"
+	"./app/config"
+	"./counter"
 )
-
-import "./acceptor"
-
-import "./app"
-import "./app/config"
 
 func checkError(err error) {
 	if err != nil {
@@ -27,4 +28,8 @@ func main() {
 
 	acceptor.Run()
 
+	reader := bufio.NewReader(os.Stdin)
+	reader.ReadString('\n')
+
+	fmt.Printf("[proxy statistic] tcp: %d udp:%d\n", counter.TCP_PROXY_COUNT, counter.UDP_PROXY_COUNT)
 }

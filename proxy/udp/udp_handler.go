@@ -4,12 +4,17 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"sync/atomic"
 	"unsafe"
-)
 
-import "../../protocol"
-import socks5 "../../protocol/socks5"
-import config "../../app/config"
+	"../../protocol"
+
+	"../../counter"
+
+	socks5 "../../protocol/socks5"
+
+	config "../../app/config"
+)
 
 func HandlePacket(local_ep net.Addr, data []byte) {
 
@@ -31,6 +36,9 @@ func HandlePacket(local_ep net.Addr, data []byte) {
 	fmt.Printf("[udp proxy] %s:%d\n", ip, port)
 
 	if socket_map.read(local_ep) == nil {
+
+		atomic.AddUint64(&counter.UDP_PROXY_COUNT, 1)
+
 		//fmt.Printf("net udp connection\n")
 		udpaddr, err := net.ResolveUDPAddr("udp4", config.ServerEndpoint)
 		if err != nil {

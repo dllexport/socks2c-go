@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sync/atomic"
 	"time"
 	"unicode/utf8"
 	"unsafe"
 
 	"../../protocol"
+	socks5 "../../protocol/socks5"
 )
 
-import socks5 "../../protocol/socks5"
+import "../../counter"
 
 var remote_ep string
 
@@ -293,6 +295,8 @@ func HandleConnection(conn net.Conn, remote string) {
 	if handleSocks5Request(&local_conn, &remote_conn) == false {
 		return
 	}
+
+	atomic.AddUint64(&counter.TCP_PROXY_COUNT, 1)
 
 	handleTunnelFlow(local_conn, remote_conn)
 }

@@ -43,6 +43,7 @@ func udpAccept() {
 	udp.SetLocal(acceptor)
 
 	var local_recv_buff [1500]byte
+
 	for {
 		bytes_read, local_ep, err := acceptor.ReadFrom(local_recv_buff[:])
 
@@ -56,5 +57,5 @@ func udpAccept() {
 
 func Run() {
 	go tcpAccept()
-	udpAccept()
+	go udpAccept()
 }
