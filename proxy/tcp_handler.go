@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"time"
 	"unicode/utf8"
 	"unsafe"
 
@@ -13,6 +14,8 @@ import (
 )
 
 var remote_ep string
+
+var socket_timeout = 60 * time.Second
 
 type METHOD_REQ struct {
 	VER, METHOD, METHODS byte
@@ -251,15 +254,19 @@ func connectAndSend(remote_conn *net.Conn, data []byte) (res bool) {
 }
 
 func upStream(local_conn, remote_conn net.Conn) {
+
 	defer local_conn.Close()
-	//defer remote_conn.Close()
+	defer remote_conn.Close()
 
 	local_recv_buff := make([]byte, 1500-52)
 
 	for {
+		local_conn.SetDeadline(time.Now().Add(socket_timeout))
+
 		byte_read, err := local_conn.Read(local_recv_buff)
 
 		if err != nil {
+			//fmt.Print(err.Error())
 			return
 		}
 
@@ -278,15 +285,18 @@ func upStream(local_conn, remote_conn net.Conn) {
 	}
 }
 func downStream(local_conn, remote_conn net.Conn) {
-	//defer local_conn.Close()
+
+	defer local_conn.Close()
 	defer remote_conn.Close()
 
 	for {
+		remote_conn.SetDeadline(time.Now().Add(socket_timeout))
 
 		var protocol_hdr_buff = make([]byte, protocol.ProtocolSize())
 		_, err := io.ReadFull(remote_conn, protocol_hdr_buff)
 
 		if err != nil {
+			//fmt.Print(err.Error())
 			return
 		}
 
