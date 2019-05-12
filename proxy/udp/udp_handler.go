@@ -111,7 +111,16 @@ func readFromRemote(local_ep net.Addr) {
 
 }
 
+// conn might be nil if readFromRemote for that specific ep returned
+// because closeRemoteSocket() is defer called from readFromRemote
+// which will clear the conn in the map
+// as the operation is guarded by mutex so as long as conn != nil,
+// it's safe to continue the sendToRemote even if it's removed afterward
 func sendToRemote(data []byte, conn *net.UDPConn) {
+
+	if conn == nil {
+		return
+	}
 
 	send_buff := protocol.OnUdpPayloadReadFromClient(data)
 
