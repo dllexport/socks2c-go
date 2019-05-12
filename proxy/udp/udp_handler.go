@@ -33,13 +33,13 @@ func HandlePacket(local_ep net.Addr, data []byte) {
 		return
 	}
 
-	fmt.Printf("[udp proxy] %s:%d\n", ip, port)
+	fmt.Printf("[udp proxy] from %s to %s:%d\n", local_ep.String(), ip, port)
 
-	if socket_map.read(local_ep) == nil {
+	if socket_map.read(local_ep.String()) == nil {
 
 		atomic.AddUint64(&counter.UDP_PROXY_COUNT, 1)
 
-		//fmt.Printf("net udp connection\n")
+		fmt.Printf("net udp connection\n")
 		udpaddr, err := net.ResolveUDPAddr("udp4", config.ServerEndpoint)
 		if err != nil {
 			fmt.Printf("%v\n", err.Error())
@@ -48,7 +48,7 @@ func HandlePacket(local_ep net.Addr, data []byte) {
 
 		remote_conn, err := net.DialUDP("udp", nil, udpaddr)
 
-		socket_map.write(local_ep, remote_conn)
+		socket_map.write(local_ep.String(), remote_conn)
 
 		if err != nil {
 			fmt.Printf("%v\n", err.Error())
@@ -57,14 +57,12 @@ func HandlePacket(local_ep net.Addr, data []byte) {
 
 		go readFromRemote(local_ep)
 	}
-
-	sendToRemote(data, socket_map.read(local_ep))
-
+	sendToRemote(data, socket_map.read(local_ep.String()))
 }
 
 func closeRemoteSocket(local_ep net.Addr) {
-	socket_map.read(local_ep).Close()
-	socket_map.write(local_ep, nil)
+	socket_map.read(local_ep.String()).Close()
+	socket_map.write(local_ep.String(), nil)
 }
 
 func readFromRemote(local_ep net.Addr) {
@@ -74,7 +72,7 @@ func readFromRemote(local_ep net.Addr) {
 	var remote_recv_buff [1500]byte
 
 	for {
-		bytes_read, err := socket_map.read(local_ep).Read(remote_recv_buff[:])
+		bytes_read, err := socket_map.read(local_ep.String()).Read(remote_recv_buff[:])
 
 		if err != nil {
 			return
