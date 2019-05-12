@@ -103,7 +103,7 @@ func readFromRemote(local_ep net.Addr) {
 
 		//fmt.Printf("read %d bytes\n", bytes_read)
 
-		_, err = local_socket.WriteTo(send_buff, local_ep)
+		_, err = GetLocal().WriteTo(send_buff, local_ep)
 		if err != nil {
 			return
 		}
