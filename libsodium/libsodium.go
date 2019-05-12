@@ -5,7 +5,13 @@ import (
 	"unsafe"
 )
 
-// #cgo LDFLAGS: /usr/local/lib/libsodium.a
+
+// // for unix || linux 
+// // 	#cgo LDFLAGS: /usr/local/lib/libsodium.a
+// // for windows    (put libsodium.a build by mingw64 in ../lib)	
+// // 	#cgo LDFLAGS: /usr/#cgo windows LDFLAGS: -L ../lib -lsodium
+
+// #cgo windows LDFLAGS: -L ../lib -lsodium
 // #include "sodium/crypto_aead_aes256gcm.h"
 // #include "sodium/core.h"
 // #include "sodium/randombytes.h"
@@ -18,7 +24,7 @@ func Init() {
 
 func RandomBytes(size uint64) []byte {
 	var data = make([]byte, size)
-	C.randombytes_buf(unsafe.Pointer(&data[0]), C.ulong(len(data)))
+	C.randombytes_buf(unsafe.Pointer(&data[0]), C.ulonglong(len(data)))
 	return data
 }
 
