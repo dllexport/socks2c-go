@@ -47,7 +47,7 @@ func HandlePacket(local_ep net.Addr, data []byte) {
 
 	fmt.Printf("[udp proxy] from %s to %s:%d\n", local_ep.String(), ip, port)
 
-	if socket_map.read(local_ep.String()) == nil {
+	if socket_map.Read(local_ep.String()) == nil {
 
 		atomic.AddUint64(&counter.UDP_PROXY_COUNT, 1)
 
@@ -62,7 +62,7 @@ func HandlePacket(local_ep net.Addr, data []byte) {
 
 		setConnTimeout(remote_conn, port)
 
-		socket_map.write(local_ep.String(), remote_conn)
+		socket_map.Write(local_ep.String(), remote_conn)
 
 		if err != nil {
 			fmt.Printf("%v\n", err.Error())
@@ -71,12 +71,12 @@ func HandlePacket(local_ep net.Addr, data []byte) {
 
 		go readFromRemote(local_ep)
 	}
-	sendToRemote(data, socket_map.read(local_ep.String()))
+	sendToRemote(data, socket_map.Read(local_ep.String()))
 }
 
 func closeRemoteSocket(local_ep net.Addr) {
-	socket_map.read(local_ep.String()).Close()
-	socket_map.write(local_ep.String(), nil)
+	socket_map.Read(local_ep.String()).Close()
+	socket_map.Delete(local_ep.String())
 }
 
 func readFromRemote(local_ep net.Addr) {
@@ -86,7 +86,7 @@ func readFromRemote(local_ep net.Addr) {
 	var remote_recv_buff [1500]byte
 
 	for {
-		bytes_read, err := socket_map.read(local_ep.String()).Read(remote_recv_buff[:])
+		bytes_read, err := socket_map.Read(local_ep.String()).Read(remote_recv_buff[:])
 
 		if err != nil {
 			//fmt.Printf("remote socket err --> %s\n", err.Error())

@@ -24,15 +24,22 @@ func CreateSocketMap() *socket_map_safe {
 	return sm
 }
 
-func (sm *socket_map_safe) read(key string) *net.UDPConn {
+// if key not exist, return nil
+func (sm *socket_map_safe) Read(key string) *net.UDPConn {
 	sm.RLock()
 	value := sm.Map[key]
 	sm.RUnlock()
 	return value
 }
-func (sm *socket_map_safe) write(key string, value *net.UDPConn) {
+func (sm *socket_map_safe) Write(key string, value *net.UDPConn) {
 	sm.Lock()
 	sm.Map[key] = value
+	sm.Unlock()
+}
+
+func (sm *socket_map_safe) Delete(key string) {
+	sm.Lock()
+	delete(sm.Map, key)
 	sm.Unlock()
 }
 
