@@ -1,6 +1,6 @@
 package app
 
-var v string = "0.0.1"
+var v string = "1.0.0"
 var version string = "socks2c-go " + v + " without UOUT"
 
 func Version() string {
