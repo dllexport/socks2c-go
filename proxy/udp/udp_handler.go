@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"sync/atomic"
+	"time"
 	"unsafe"
 
 	"../../protocol"
@@ -15,6 +16,17 @@ import (
 
 	config "../../app/config"
 )
+
+var UDP_SESSION_TIMEOUT_DNS = 3 * time.Second
+var UDP_SESSION_TIMEOUT_NORMAL = 30 * time.Second
+
+func setConnTimeout(conn net.Conn, port uint16) {
+	if port == 53 || port == 5353 {
+		conn.SetDeadline(time.Now().Add(UDP_SESSION_TIMEOUT_DNS))
+	} else {
+		conn.SetDeadline(time.Now().Add(UDP_SESSION_TIMEOUT_NORMAL))
+	}
+}
 
 func HandlePacket(local_ep net.Addr, data []byte) {
 
@@ -39,7 +51,7 @@ func HandlePacket(local_ep net.Addr, data []byte) {
 
 		atomic.AddUint64(&counter.UDP_PROXY_COUNT, 1)
 
-		fmt.Printf("net udp connection\n")
+		//fmt.Printf("net udp connection\n")
 		udpaddr, err := net.ResolveUDPAddr("udp4", config.ServerEndpoint)
 		if err != nil {
 			fmt.Printf("%v\n", err.Error())
@@ -47,6 +59,8 @@ func HandlePacket(local_ep net.Addr, data []byte) {
 		}
 
 		remote_conn, err := net.DialUDP("udp", nil, udpaddr)
+
+		setConnTimeout(remote_conn, port)
 
 		socket_map.write(local_ep.String(), remote_conn)
 
@@ -75,6 +89,7 @@ func readFromRemote(local_ep net.Addr) {
 		bytes_read, err := socket_map.read(local_ep.String()).Read(remote_recv_buff[:])
 
 		if err != nil {
+			//fmt.Printf("remote socket err --> %s\n", err.Error())
 			return
 		}
 
