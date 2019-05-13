@@ -12,11 +12,12 @@ import (
 	"../../protocol"
 	socks5 "../../protocol/socks5"
 )
-
+import logger "../../app/logger"
 import "../../counter"
 
 var remote_ep string
 
+// if the tcp connection is idle for 60 , close it
 var socket_timeout = 60 * time.Second
 
 func handleMethodSelection(conn net.Conn) bool {
@@ -79,12 +80,13 @@ func handleSocks5Request(local_conn, remote_conn *net.Conn) bool {
 				return false
 			}
 
-			fmt.Printf("[tcp proxy] %s:%d\n", ip, port)
+			logger.LOG_INFO("[tcp proxy] %s --> %s:%d\n", (*local_conn).RemoteAddr().String(), ip, port)
+
 			break
 		}
 	case socks5.IPV6:
 		{
-			fmt.Printf("ipv6 not support yet")
+			logger.LOG_INFO("ipv6 not support yet")
 			return false
 		}
 	case socks5.DOMAINNAME:
@@ -95,7 +97,7 @@ func handleSocks5Request(local_conn, remote_conn *net.Conn) bool {
 				return false
 			}
 
-			fmt.Printf("[tcp proxy] %s:%d\n", domain, port)
+			logger.LOG_INFO("[tcp proxy] %s:%d\n", domain, port)
 
 			addr := net.ParseIP(domain)
 			if addr != nil {
@@ -110,13 +112,6 @@ func handleSocks5Request(local_conn, remote_conn *net.Conn) bool {
 				return false
 			}
 
-			// addr, err := net.LookupIP(domain)
-
-			// if err != nil {
-			// 	return false
-			// }
-
-			// fmt.Printf("resolved %s\n", addr[0])
 			break
 		}
 	}
@@ -207,7 +202,6 @@ func upStream(local_conn, remote_conn net.Conn) {
 	local_recv_buff := make([]byte, 1500-52)
 
 	for {
-		local_conn.SetDeadline(time.Now().Add(socket_timeout))
 
 		byte_read, err := local_conn.Read(local_recv_buff)
 
@@ -236,14 +230,15 @@ func downStream(local_conn, remote_conn net.Conn) {
 	defer remote_conn.Close()
 
 	for {
-		remote_conn.SetDeadline(time.Now().Add(socket_timeout))
+
+		remote_conn.SetReadDeadline(time.Now().Add(socket_timeout))
 
 		var protocol_hdr_buff = make([]byte, protocol.ProtocolSize())
 		_, err := io.ReadFull(remote_conn, protocol_hdr_buff)
 
 		if err != nil {
-			//fmt.Print(err.Error())
-			return
+			fmt.Printf("Read header err --> %s\n", err.Error())
+			break
 		}
 
 		//fmt.Printf("read %v bytes hdr from remote\n", byte_read)
@@ -257,16 +252,23 @@ func downStream(local_conn, remote_conn net.Conn) {
 			break
 		}
 
+		logger.LOG_DEBUG("payload len %d\n", payload_len)
+
 		remote_recv_buff := make([]byte, payload_len)
 
-		_, err = io.ReadFull(remote_conn, remote_recv_buff)
+		byte_read, err := io.ReadFull(remote_conn, remote_recv_buff)
 
-		//fmt.Printf("read %v bytes payload from remote\n", byte_read)
+		if err != nil {
+			logger.LOG_DEBUG("io.ReadFull err --> %v\n", err.Error())
+			return
+		}
+
+		logger.LOG_DEBUG("read %d bytes payload from remote\n", byte_read)
 
 		read_err := protocol.OnPayloadReadFromRemote(protocol_hdr, remote_recv_buff)
 
 		if read_err != true {
-			fmt.Printf("[tcp proxy] decrypt err\n")
+			logger.LOG_DEBUG("[tcp proxy] decrypt err\n")
 			return
 		}
 

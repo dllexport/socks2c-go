@@ -15,23 +15,23 @@ func GetLocal() *net.UDPConn {
 
 type socket_map_safe struct {
 	sync.RWMutex
-	Map map[string]*net.UDPConn
+	Map map[string]net.UDPConn
 }
 
 func CreateSocketMap() *socket_map_safe {
 	sm := new(socket_map_safe)
-	sm.Map = make(map[string]*net.UDPConn)
+	sm.Map = make(map[string]net.UDPConn)
 	return sm
 }
 
 // if key not exist, return nil
-func (sm *socket_map_safe) Read(key string) *net.UDPConn {
+func (sm *socket_map_safe) Read(key string) (net.UDPConn, bool) {
 	sm.RLock()
-	value := sm.Map[key]
+	value, err := sm.Map[key]
 	sm.RUnlock()
-	return value
+	return value, err
 }
-func (sm *socket_map_safe) Write(key string, value *net.UDPConn) {
+func (sm *socket_map_safe) Write(key string, value net.UDPConn) {
 	sm.Lock()
 	sm.Map[key] = value
 	sm.Unlock()

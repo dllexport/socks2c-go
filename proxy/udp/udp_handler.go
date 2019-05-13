@@ -16,15 +16,19 @@ import (
 
 	config "../../app/config"
 )
+import logger "../../app/logger"
 
 var UDP_SESSION_TIMEOUT_DNS = 3 * time.Second
 var UDP_SESSION_TIMEOUT_NORMAL = 30 * time.Second
 
+// we set write SetWriteDeadline here
+// cause whether a socket is timeout determined by the client side
+// there's situation that client might send multiple packet while the remote server reply nothing
 func setConnTimeout(conn net.Conn, port uint16) {
 	if port == 53 || port == 5353 {
-		conn.SetDeadline(time.Now().Add(UDP_SESSION_TIMEOUT_DNS))
+		conn.SetWriteDeadline(time.Now().Add(UDP_SESSION_TIMEOUT_DNS))
 	} else {
-		conn.SetDeadline(time.Now().Add(UDP_SESSION_TIMEOUT_NORMAL))
+		conn.SetWriteDeadline(time.Now().Add(UDP_SESSION_TIMEOUT_NORMAL))
 	}
 }
 
@@ -45,9 +49,11 @@ func HandlePacket(local_ep net.Addr, data []byte) {
 		return
 	}
 
-	fmt.Printf("[udp proxy] from %s to %s:%d\n", local_ep.String(), ip, port)
+	logger.LOG_INFO("[udp proxy] %s --> %s:%d\n", local_ep.String(), ip, port)
 
-	if socket_map.Read(local_ep.String()) == nil {
+	conn, res := socket_map.Read(local_ep.String())
+
+	if res == false {
 
 		atomic.AddUint64(&counter.UDP_PROXY_COUNT, 1)
 
@@ -60,33 +66,39 @@ func HandlePacket(local_ep net.Addr, data []byte) {
 
 		remote_conn, err := net.DialUDP("udp", nil, udpaddr)
 
-		setConnTimeout(remote_conn, port)
-
-		socket_map.Write(local_ep.String(), remote_conn)
-
 		if err != nil {
 			fmt.Printf("%v\n", err.Error())
 			os.Exit(-1)
 		}
 
-		go readFromRemote(local_ep)
+		setConnTimeout(remote_conn, port)
+
+		socket_map.Write(local_ep.String(), *remote_conn)
+
+		sendToRemote(data, *remote_conn)
+
+		go readFromRemote(local_ep, *remote_conn)
+
+	} else {
+		sendToRemote(data, conn)
 	}
-	sendToRemote(data, socket_map.Read(local_ep.String()))
+
 }
 
 func closeRemoteSocket(local_ep net.Addr) {
-	socket_map.Read(local_ep.String()).Close()
+	//socket_map.Read(local_ep.String()).Close()
 	socket_map.Delete(local_ep.String())
 }
 
-func readFromRemote(local_ep net.Addr) {
+func readFromRemote(local_ep net.Addr, conn net.UDPConn) {
 
 	defer closeRemoteSocket(local_ep)
 
 	var remote_recv_buff [1500]byte
 
 	for {
-		bytes_read, err := socket_map.Read(local_ep.String()).Read(remote_recv_buff[:])
+
+		bytes_read, err := conn.Read(remote_recv_buff[:])
 
 		if err != nil {
 			//fmt.Printf("remote socket err --> %s\n", err.Error())
@@ -116,11 +128,7 @@ func readFromRemote(local_ep net.Addr) {
 // which will clear the conn in the map
 // as the operation is guarded by mutex so as long as conn != nil,
 // it's safe to continue the sendToRemote even if it's removed afterward
-func sendToRemote(data []byte, conn *net.UDPConn) {
-
-	if conn == nil {
-		return
-	}
+func sendToRemote(data []byte, conn net.UDPConn) {
 
 	send_buff := protocol.OnUdpPayloadReadFromClient(data)
 
