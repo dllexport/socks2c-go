@@ -37,21 +37,27 @@ func ProtocolSize() uint64 {
 	return 52
 }
 
-func encryptHeader(protocol_hdr *Protocol, send_buff *[]byte) {
-
-	encrypted_data, _, tag_out := libsodium.EncryptData(proxy_key, protocol_hdr.NONCE, (*send_buff)[44:], 8)
-
-	copy((*send_buff)[44:], encrypted_data)
-	copy(protocol_hdr.LEN_TAG[:], tag_out[:])
-
+func payloadLengthOffset() uint64 {
+	return 44
 }
 
 func encryptPayload(protocol_hdr *Protocol, send_buff *[]byte) {
+
+	protocol_hdr.PADDING_LENGTH = 0
 
 	encrypted_data, _, tag_out := libsodium.EncryptData(proxy_key, protocol_hdr.NONCE, (*send_buff)[ProtocolSize():], uint64(protocol_hdr.PAYLOAD_LENGTH))
 
 	copy((*send_buff)[ProtocolSize():], encrypted_data)
 	copy(protocol_hdr.PAYLOAD_TAG[:], tag_out[:])
+
+}
+
+func encryptHeader(protocol_hdr *Protocol, send_buff *[]byte) {
+
+	encrypted_data, _, tag_out := libsodium.EncryptData(proxy_key, protocol_hdr.NONCE, (*send_buff)[payloadLengthOffset():], 8)
+
+	copy((*send_buff)[payloadLengthOffset():], encrypted_data)
+	copy(protocol_hdr.LEN_TAG[:], tag_out[:])
 
 }
 
