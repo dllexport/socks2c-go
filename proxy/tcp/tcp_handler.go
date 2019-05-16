@@ -237,7 +237,7 @@ func downStream(local_conn, remote_conn net.Conn) {
 		_, err := io.ReadFull(remote_conn, protocol_hdr_buff)
 
 		if err != nil {
-			fmt.Printf("Read header err --> %s\n", err.Error())
+			logger.LOG_DEBUG("Read header err --> %s\n", err.Error())
 			break
 		}
 
