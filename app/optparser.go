@@ -53,6 +53,8 @@ func Parse() {
 
 	config.Init(*optKey, *optServerHost, *optSocks5Host)
 
+	systemproxy.EnableNoProxy()
+
 	if *optPac {
 		logger.LOG_INFO("[Enable Pac]\n")
 		systemproxy.EnablePac()
