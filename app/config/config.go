@@ -22,8 +22,8 @@ func Init(key, server, socks5 string) {
 		os.Exit(-1)
 	}
 
-	endpointCheck(socks5)
-	endpointCheck(server)
+	EndpointCheck(socks5)
+	EndpointCheck(server)
 
 	Socks5Endpoint = socks5
 	ServerEndpoint = server
@@ -35,7 +35,7 @@ func Init(key, server, socks5 string) {
 
 }
 
-func endpointCheck(endpoint string) {
+func EndpointCheck(endpoint string) {
 	_, err := net.Dial("udp", endpoint)
 	if err != nil {
 		fmt.Printf("%s is not a vaild endpoint\n", endpoint)
