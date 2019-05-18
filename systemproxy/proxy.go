@@ -1,6 +1,6 @@
 package systemproxy
 
-var default_pac_url string = "http://127.0.0.1:65533/asset/proxy.pac"
+var default_pac_url string = "http://127.0.0.1:65533"
 
 func EnableGlobal(ip, port string) {
 	enableGlobalImpl(ip, port)

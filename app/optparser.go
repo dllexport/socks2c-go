@@ -8,11 +8,12 @@ import (
 	"strings"
 
 	"../systemproxy"
+	"./config"
 	"./logger"
 	"github.com/pborman/getopt"
 )
 
-func Parse() (key, server_ep, socks5_ep string) {
+func Parse() {
 
 	optKey := getopt.StringLong("k", 0, "", "proxy key")
 	optLog := getopt.StringLong("log", 0, "0", "log level")
@@ -50,10 +51,12 @@ func Parse() (key, server_ep, socks5_ep string) {
 		logger.SetLogLevel(intabs(s))
 	}
 
+	config.Init(*optKey, *optServerHost, *optSocks5Host)
+
 	if *optPac {
 		logger.LOG_INFO("[Enable Pac]\n")
 		systemproxy.EnablePac()
-		return *optKey, *optServerHost, *optSocks5Host
+		return
 	}
 
 	if *optGlobalProxy {
@@ -67,7 +70,7 @@ func Parse() (key, server_ep, socks5_ep string) {
 		systemproxy.EnableGlobal(res[0], res[1])
 	}
 
-	return *optKey, *optServerHost, *optSocks5Host
+	return
 }
 
 func intabs(n int) int {

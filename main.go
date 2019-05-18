@@ -7,7 +7,6 @@ import (
 
 	"./acceptor"
 	"./app"
-	"./app/config"
 	"./app/logger"
 	"./counter"
 	"./systemproxy"
@@ -22,11 +21,9 @@ func checkError(err error) {
 
 func main() {
 
-	key, server_ep, socks5_ep := app.Parse()
+	app.Parse()
 
 	app.SingleApp()
-
-	config.Init(key, server_ep, socks5_ep)
 
 	acceptor.Run()
 
