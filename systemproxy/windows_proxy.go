@@ -38,18 +38,18 @@ func enablePacImpl(url string) {
 		return
 	}
 
-	k2, err := registry.OpenKey(registry.CURRENT_USER, `Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings`, registry.ALL_ACCESS)
-	if err != nil {
-		println(err.Error())
-		return
-	}
-	defer k2.Close()
+	// k2, err := registry.OpenKey(registry.CURRENT_USER, `Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings`, registry.ALL_ACCESS)
+	// if err != nil {
+	// 	println(err.Error())
+	// 	return
+	// }
+	// defer k2.Close()
 
-	err = k2.SetDWordValue("EnableAutoproxyResultCache", 0)
-	if err != nil {
-		println(err.Error())
-		return
-	}
+	// err = k2.SetDWordValue("EnableAutoproxyResultCache", 0)
+	// if err != nil {
+	// 	println(err.Error())
+	// 	return
+	// }
 
 	refreshedSetting()
 }
@@ -116,7 +116,7 @@ func refreshedSetting() {
 			"}\n" +
 			"Reload-InternetOptions\n",
 	)
-	// fmt.Println(stdout)
+	//fmt.Printf("powershell: %s\n", stdout)
 	// fmt.Println(stderr)
 	if err != nil {
 		//fmt.Println(err)
