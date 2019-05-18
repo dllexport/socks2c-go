@@ -35,6 +35,20 @@ func enablePacImpl(url string) {
 		println(err)
 		return
 	}
+
+	k2, err := registry.OpenKey(registry.CURRENT_USER, `Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings`, registry.ALL_ACCESS)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	defer k2.Close()
+
+	err = k2.SetDWordValue("EnableAutoproxyResultCache", 0)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
 }
 
 func enableGlobalImpl(ip, port string) {
@@ -61,6 +75,12 @@ func enableGlobalImpl(ip, port string) {
 		println(err)
 		return
 	}
+
+	// err = k.SetDWordValue("BadProxyExpiresTime", 5)
+	// if err != nil {
+	// 	println(err)
+	// 	return
+	// }
 
 	go socks5tohttp.Start(httpPortStr)
 
