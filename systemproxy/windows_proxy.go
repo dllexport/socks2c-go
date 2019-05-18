@@ -116,7 +116,6 @@ func refreshedSetting() {
 			"}\n" +
 			"Reload-InternetOptions\n",
 	)
-	ps.Execute("")
 	// fmt.Println(stdout)
 	// fmt.Println(stderr)
 	if err != nil {
