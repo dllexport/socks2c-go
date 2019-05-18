@@ -37,9 +37,11 @@ func HandlePacket(local_ep net.Addr, data []byte) {
 	client_req := (*socks5.UDP_RELAY_PACKET)(unsafe.Pointer(&data[0]))
 
 	if client_req.RSV != 0x00 {
+		logger.LOG_DEBUG("HandlePacket: RSV != 0x00 drop\n")
 		return
 	}
 	if client_req.ATYP != 0x01 {
+		logger.LOG_DEBUG("HandlePacket: ATYP != 0x01 udp proxy support ipv4 only\n")
 		return
 	}
 

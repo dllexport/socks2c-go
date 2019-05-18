@@ -2,9 +2,12 @@ package app
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"strconv"
+	"strings"
 
+	"../systemproxy"
 	"./logger"
 	"github.com/pborman/getopt"
 )
@@ -18,6 +21,9 @@ func Parse() (key, server_ep, socks5_ep string) {
 	optHelp := getopt.BoolLong("help", 0, "Help")
 	optVersion := getopt.BoolLong("v", 0, "Version Infomation")
 	optStop := getopt.BoolLong("stop", 0, "stop socks2c-go")
+	optPac := getopt.BoolLong("pac", 0, "enable pac mode")
+	optGlobalProxy := getopt.BoolLong("gp", 0, "enable global proxy mode")
+
 	getopt.Parse()
 
 	if *optHelp {
@@ -42,6 +48,23 @@ func Parse() (key, server_ep, socks5_ep string) {
 			logger.SetLogLevel(0)
 		}
 		logger.SetLogLevel(intabs(s))
+	}
+
+	if *optPac {
+		logger.LOG_INFO("[Enable Pac]\n")
+		systemproxy.EnablePac()
+		return *optKey, *optServerHost, *optSocks5Host
+	}
+
+	if *optGlobalProxy {
+		logger.LOG_INFO("[Enable Global Proxy]\n")
+		_, err := net.Dial("udp", *optSocks5Host)
+		if err != nil {
+			fmt.Printf("%s is not a vaild endpoint\n", *optSocks5Host)
+			os.Exit(-1)
+		}
+		res := strings.Split(*optSocks5Host, ":")
+		systemproxy.EnableGlobal(res[0], res[1])
 	}
 
 	return *optKey, *optServerHost, *optSocks5Host

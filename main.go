@@ -8,7 +8,9 @@ import (
 	"./acceptor"
 	"./app"
 	"./app/config"
+	"./app/logger"
 	"./counter"
+	"./systemproxy"
 )
 
 func checkError(err error) {
@@ -31,5 +33,6 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	reader.ReadString('\n')
 
-	fmt.Printf("[proxy statistic] tcp: %d udp:%d\n", counter.TCP_PROXY_COUNT, counter.UDP_PROXY_COUNT)
+	logger.LOG_INFO("[proxy statistic] tcp: %d udp:%d\n", counter.TCP_PROXY_COUNT, counter.UDP_PROXY_COUNT)
+	systemproxy.EnableNoProxy()
 }
