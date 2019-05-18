@@ -8,9 +8,9 @@ import (
 // // for unix || linux
 // // 	#cgo LDFLAGS: /usr/local/lib/libsodium.a
 // // for windows    (put libsodium.a build by mingw64 in ../lib)
-// // 	#cgo LDFLAGS: /usr/#cgo windows LDFLAGS: -L ../lib -lsodium
+// // 	#cgo windows LDFLAGS: -L ../lib -lsodium
 
-// #cgo windows LDFLAGS: -L ../lib -lsodium
+// #cgo LDFLAGS: /usr/local/lib/libsodium.a
 // #include "sodium/crypto_aead_aes256gcm.h"
 // #include "sodium/core.h"
 // #include "sodium/randombytes.h"
@@ -23,7 +23,7 @@ func Init() {
 
 func RandomBytes(size uint64) []byte {
 	var data = make([]byte, size)
-	C.randombytes_buf(unsafe.Pointer(&data[0]), C.ulonglong(len(data)))
+	C.randombytes_buf(unsafe.Pointer(&data[0]), C.ulong(len(data)))
 	return data
 }
 
@@ -32,8 +32,6 @@ func EncryptData(key [32]byte, nonce [12]byte, original_data []byte, original_da
 	encrypted_data = make([]byte, original_data_length)
 
 	tag_length = 0
-
-	//fmt.Printf("before enc using:\noriginal_data: %v\nlen: %v\ntag_out:%v\nnonce: %v\nkey: %v\n", original_data, original_data_length, tag_out, nonce, key)
 
 	original_data_copy := make([]byte, original_data_length)
 	copy(original_data_copy, original_data)
@@ -57,10 +55,6 @@ func DecryptData(key [32]byte, nonce [12]byte, encrypted_data []byte, encrypted_
 	encrypted_data_copy := make([]byte, encrypted_data_length)
 	copy(encrypted_data_copy, encrypted_data)
 
-	//fmt.Printf("\n\n")
-
-	//fmt.Printf("before dec using:\nencrypted_data: %v\ntag_out:%v\nnonce: %v\nkey: %v\n", encrypted_data, tag_in, nonce, key)
-
 	dectypt_res := C.crypto_aead_aes256gcm_decrypt_detached(
 		(*C.uchar)(unsafe.Pointer(&decrypted_data[0])),
 		nil,
@@ -71,8 +65,6 @@ func DecryptData(key [32]byte, nonce [12]byte, encrypted_data []byte, encrypted_
 		0,
 		(*C.uchar)(unsafe.Pointer(&nonce[0])),
 		(*C.uchar)(unsafe.Pointer(&key)))
-
-	//fmt.Printf("%v\n\n", dectypt_res)
 
 	if dectypt_res != 0 {
 		return nil, false
