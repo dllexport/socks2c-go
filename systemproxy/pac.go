@@ -12,7 +12,7 @@ import (
 	"github.com/rakyll/statik/fs"
 )
 
-func EnablePac() {
+func enablePac(url string) {
 	statikFS, err := fs.New()
 	if err != nil {
 		log.Fatal(err)
@@ -26,6 +26,5 @@ func EnablePac() {
 	http.Handle("/asset/", http.StripPrefix("/asset", http.FileServer(statikFS)))
 	go http.ListenAndServe("127.0.0.1:65533", nil)
 
-	execAndGetRes("networksetup", "-setautoproxyurl", getDefaultInterfaceName(), "http://127.0.0.1:65533/asset/proxy.pac")
-
+	enablePacImpl(url)
 }

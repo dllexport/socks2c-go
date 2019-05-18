@@ -32,6 +32,8 @@ func handleMethodSelection(conn net.Conn) bool {
 	client_req := (*socks5.METHOD_REQ)(unsafe.Pointer(&socks5_method_buff[0]))
 
 	if client_req.VER != 0x05 {
+		logger.LOG_DEBUG("METHOD_REQ.VER != 0x05\n")
+		logger.LOG_DEBUG("%v\n", socks5_method_buff[:3])
 		return false
 	}
 
