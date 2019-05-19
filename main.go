@@ -21,9 +21,9 @@ func checkError(err error) {
 
 func main() {
 
-	app.Parse()
-
 	app.SingleApp()
+
+	app.Parse()
 
 	acceptor.Run()
 
