@@ -14,14 +14,17 @@ var Key string
 
 func Init(key, server, socks5 string) {
 	if len(server) == 0 {
-		fmt.Printf("--s missing\n")
+		fmt.Printf("-s missing\n")
 		os.Exit(-1)
 	}
 	if len(socks5) == 0 {
-		fmt.Printf("--c missing\n")
+		fmt.Printf("-c missing\n")
 		os.Exit(-1)
 	}
-
+	if len(key) == 0 {
+		fmt.Printf("-k missing\n")
+		os.Exit(-1)
+	}
 	EndpointCheck(socks5)
 	EndpointCheck(server)
 

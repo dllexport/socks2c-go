@@ -6,11 +6,11 @@ import (
 	"os"
 )
 
-var unique_socks2c_ep = "127.0.0.1:44444"
+var uniqueSocks2cEndpoint = "127.0.0.1:44444"
 
 func handleRead(conn *net.UDPConn) {
-	var local_recv_buff = [10]byte{0}
-	conn.Read(local_recv_buff[:])
+	var buff = [10]byte{0}
+	conn.Read(buff[:])
 
 	fmt.Printf("recv signal quitting\n")
 
@@ -18,7 +18,7 @@ func handleRead(conn *net.UDPConn) {
 }
 
 func SingleApp() {
-	udpaddr, _ := net.ResolveUDPAddr("udp4", unique_socks2c_ep)
+	udpaddr, _ := net.ResolveUDPAddr("udp4", uniqueSocks2cEndpoint)
 
 	conn, err := net.ListenUDP("udp", udpaddr)
 	if err != nil {
@@ -29,7 +29,7 @@ func SingleApp() {
 }
 
 func SendStopSingal() {
-	udpaddr, _ := net.ResolveUDPAddr("udp4", unique_socks2c_ep)
+	udpaddr, _ := net.ResolveUDPAddr("udp4", uniqueSocks2cEndpoint)
 	udpconn, _ := net.DialUDP("udp", nil, udpaddr)
 	udpconn.Write([]byte("stop\r\n"))
 	fmt.Printf("stopping socks2c-go\n")

@@ -1,36 +1,32 @@
 package app
 
 import (
+	"flag"
 	"fmt"
 	"net"
 	"os"
-	"strconv"
 	"strings"
 
 	"../systemproxy"
 	"./config"
 	"./logger"
-	"github.com/pborman/getopt"
 )
 
 func Parse() {
 
-	optKey := getopt.StringLong("k", 0, "", "proxy key")
-	optLog := getopt.StringLong("log", 0, "0", "log level")
-	optServerHost := getopt.StringLong("s", 0, "", "server ep")
-	optSocks5Host := getopt.StringLong("c", 0, "", "local socks5 ep")
-	optHelp := getopt.BoolLong("help", 0, "Help")
-	optVersion := getopt.BoolLong("v", 0, "Version Infomation")
-	optStop := getopt.BoolLong("stop", 0, "stop socks2c-go")
-	optPac := getopt.BoolLong("pac", 0, "enable pac mode")
-	optGlobalProxy := getopt.BoolLong("gp", 0, "enable global proxy mode")
+	optKey := flag.String("k", "", "key for the proxy connection")
+	optLog := flag.Int("log", 0, "set the log level, the higher, the more details")
 
-	getopt.Parse()
+	optServerHost := flag.String("s", "", "server endpoint")
+	optSocks5Host := flag.String("c", "127.0.0.1:1080", "local socks5 server endpoint")
 
-	if *optHelp {
-		getopt.Usage()
-		os.Exit(0)
-	}
+	optVersion := flag.Bool("v", false, "Version Infomation")
+	optStop := flag.Bool("stop", false, "Stop socks2c that is currently running")
+
+	optPac := flag.Bool("pac", false, "Enable pac mode")
+	optGlobalProxy := flag.Bool("gp", false, "enable global proxy mode")
+
+	flag.Parse()
 
 	if *optVersion {
 		fmt.Printf("%s\n", Version())
@@ -43,12 +39,7 @@ func Parse() {
 	}
 
 	if optLog != nil {
-		s, err := strconv.Atoi(*optLog)
-		if err != nil {
-			fmt.Printf("--log err, enable default level 0\n")
-			logger.SetLogLevel(0)
-		}
-		logger.SetLogLevel(intabs(s))
+		logger.SetLogLevel(intabs(*optLog))
 	}
 
 	config.Init(*optKey, *optServerHost, *optSocks5Host)
