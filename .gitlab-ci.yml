@@ -1,6 +1,6 @@
 before_script:
   - export GOPATH=$HOME/go
-  - go get -v github.com/rakyll/statik/fs
+  - go get -v github.com/rakyll/statik
 
 stages:
   - build
