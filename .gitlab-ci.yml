@@ -1,11 +1,6 @@
-variables:
-  REPO_NAME: socks2c-go
-
 before_script:
   - export GOPATH=$HOME/go
-  - echo $CI_PROJECT_DIR
-  - ln -svf $CI_PROJECT_DIR $GOPATH/src/$CI_PROJECT_DIR
-  - cd $GOPATH/src/$REPO_NAME
+  - echo pwd
 
 stages:
   - build
