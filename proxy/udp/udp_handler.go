@@ -2,21 +2,20 @@ package udp
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"sync/atomic"
 	"time"
 	"unsafe"
 
-	"../../protocol"
+	"socks2c-go/counter"
 
-	"../../counter"
+	protocol "socks2c-go/protocol"
+	socks5 "socks2c-go/protocol/socks5"
 
-	socks5 "../../protocol/socks5"
-
-	config "../../app/config"
+	"socks2c-go/app/config"
 )
-import logger "../../app/logger"
 
 var UDP_SESSION_TIMEOUT_DNS = 3 * time.Second
 var UDP_SESSION_TIMEOUT_NORMAL = 30 * time.Second
@@ -37,11 +36,11 @@ func HandlePacket(local_ep net.Addr, data []byte) {
 	client_req := (*socks5.UDP_RELAY_PACKET)(unsafe.Pointer(&data[0]))
 
 	if client_req.RSV != 0x00 {
-		logger.LOG_DEBUG("HandlePacket: RSV != 0x00 drop\n")
+		log.Printf("HandlePacket: RSV != 0x00 drop\n")
 		return
 	}
 	if client_req.ATYP != 0x01 {
-		logger.LOG_DEBUG("HandlePacket: ATYP != 0x01 udp proxy support ipv4 only\n")
+		log.Printf("HandlePacket: ATYP != 0x01 udp proxy support ipv4 only\n")
 		return
 	}
 
@@ -51,7 +50,7 @@ func HandlePacket(local_ep net.Addr, data []byte) {
 		return
 	}
 
-	logger.LOG_INFO("[udp proxy] %s --> %s:%d\n", local_ep.String(), ip, port)
+	log.Printf("[udp proxy] %s --> %s:%d\n", local_ep.String(), ip, port)
 
 	conn, res := socket_map.Read(local_ep.String())
 

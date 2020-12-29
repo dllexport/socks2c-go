@@ -5,7 +5,7 @@ import (
 	"os"
 	"unsafe"
 
-	"../libsodium"
+	"socks2c-go/libsodium"
 )
 
 var proxy_key = [32]byte{0}

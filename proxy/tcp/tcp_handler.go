@@ -3,17 +3,18 @@ package tcp
 import (
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"sync/atomic"
 	"time"
 	"unicode/utf8"
 	"unsafe"
 
-	"../../protocol"
-	socks5 "../../protocol/socks5"
+	protocol "socks2c-go/protocol"
+	socks5 "socks2c-go/protocol/socks5"
+
+	"socks2c-go/counter"
 )
-import logger "../../app/logger"
-import "../../counter"
 
 var remote_ep string
 
@@ -32,8 +33,8 @@ func handleMethodSelection(conn net.Conn) bool {
 	client_req := (*socks5.METHOD_REQ)(unsafe.Pointer(&socks5_method_buff[0]))
 
 	if client_req.VER != 0x05 {
-		logger.LOG_DEBUG("METHOD_REQ.VER != 0x05\n")
-		logger.LOG_DEBUG("%v\n", socks5_method_buff[:3])
+		log.Printf("METHOD_REQ.VER != 0x05\n")
+		log.Printf("%v\n", socks5_method_buff[:3])
 		return false
 	}
 
@@ -82,13 +83,13 @@ func handleSocks5Request(local_conn, remote_conn *net.Conn) bool {
 				return false
 			}
 
-			logger.LOG_INFO("[tcp proxy] %s --> %s:%d\n", (*local_conn).RemoteAddr().String(), ip, port)
+			log.Printf("[tcp proxy] %s --> %s:%d\n", (*local_conn).RemoteAddr().String(), ip, port)
 
 			break
 		}
 	case socks5.IPV6:
 		{
-			logger.LOG_INFO("ipv6 not support yet")
+			log.Printf("ipv6 not support yet")
 			return false
 		}
 	case socks5.DOMAINNAME:
@@ -99,7 +100,7 @@ func handleSocks5Request(local_conn, remote_conn *net.Conn) bool {
 				return false
 			}
 
-			logger.LOG_INFO("[tcp proxy] %s:%d\n", domain, port)
+			log.Printf("[tcp proxy] %s:%d\n", domain, port)
 
 			addr := net.ParseIP(domain)
 			if addr != nil {
@@ -239,7 +240,7 @@ func downStream(local_conn, remote_conn net.Conn) {
 		_, err := io.ReadFull(remote_conn, protocol_hdr_buff)
 
 		if err != nil {
-			logger.LOG_DEBUG("Read header err --> %s\n", err.Error())
+			log.Printf("Read header err --> %s\n", err.Error())
 			break
 		}
 
@@ -254,23 +255,21 @@ func downStream(local_conn, remote_conn net.Conn) {
 			break
 		}
 
-		logger.LOG_DEBUG("payload len %d\n", payload_len)
-
 		remote_recv_buff := make([]byte, payload_len)
 
 		byte_read, err := io.ReadFull(remote_conn, remote_recv_buff)
 
 		if err != nil {
-			logger.LOG_DEBUG("io.ReadFull err --> %v\n", err.Error())
+			log.Printf("io.ReadFull err --> %v\n", err.Error())
 			return
 		}
 
-		logger.LOG_DEBUG("read %d bytes payload from remote\n", byte_read)
+		log.Printf("read %d bytes payload from remote\n", byte_read)
 
 		read_err := protocol.OnPayloadReadFromRemote(protocol_hdr, remote_recv_buff)
 
 		if read_err != true {
-			logger.LOG_DEBUG("[tcp proxy] decrypt err\n")
+			log.Printf("[tcp proxy] decrypt err\n")
 			return
 		}
 

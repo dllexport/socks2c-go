@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"socks2c-go/app/config"
+	"socks2c-go/protocol"
+	"socks2c-go/proxy/tcp"
+	"socks2c-go/proxy/udp"
 )
-import tcp "../proxy/tcp"
-import udp "../proxy/udp"
-import "../protocol"
-import config "../app/config"
 
 func checkError(err error) {
 	if err != nil {

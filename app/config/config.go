@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"socks2c-go/libsodium"
+	"socks2c-go/protocol"
 )
-import "../../protocol"
-import "../../libsodium"
 
 var ServerEndpoint string
 var Socks5Endpoint string

@@ -3,13 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 
-	"./acceptor"
-	"./app"
-	"./app/logger"
-	"./counter"
-	"./systemproxy"
+	"socks2c-go/acceptor"
+	"socks2c-go/app"
+	"socks2c-go/counter"
 )
 
 func checkError(err error) {
@@ -30,7 +29,6 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	reader.ReadString('\n')
 
-	logger.LOG_INFO("[proxy statistic] tcp: %d udp:%d\n", counter.TCP_PROXY_COUNT, counter.UDP_PROXY_COUNT)
+	log.Printf("[proxy statistic] tcp: %d udp:%d\n", counter.TCP_PROXY_COUNT, counter.UDP_PROXY_COUNT)
 
-	systemproxy.EnableNoProxy()
 }
